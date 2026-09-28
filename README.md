@@ -23,7 +23,10 @@ would live on `alonweb.github.io`, which shares storage).
    (`flow.js`, "who is the one?"), the join screen's "Tonight's ten" (`app.js`), the review and
    presenter lines "Who is the one" and "her" (`present-format.js`), and the presenter's contest
    section ("her", "she won it", the "Contestant" column, in `presenter.js`).
-4. **Publish** as its own GitHub Pages repository, like `alonweb/the-one-simulator`. Not done yet.
+4. **Publish.** Its own repository is `alonweb/simulator2` (created 2026-09-28): players at
+   https://alonweb.github.io/simulator2/, presenter at https://alonweb.github.io/simulator2/presenter.html.
+   GitHub's `main` holds only an under-construction page for now; the game is developed on the
+   local `build-simulator` branch and pushed to `main` when the devices content is in.
 
 ---
 
