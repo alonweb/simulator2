@@ -3,13 +3,14 @@
 **Status 2026-09-28: a duplicate of the women's simulator, waiting for its content.** Alon
 brings the device photos and questions on 2026-09-29. Until then this is the women's game
 unchanged, with three differences that keep the two apart: `SESSION_LABEL` is `DEVICES1`,
-`ENDPOINT` is a placeholder (pages say they cannot reach the server), and the browser keys are
+`ENDPOINT` is the devices edition's own server (set up 2026-09-28, spreadsheet "Copy of THE ONE
+focus group", same presenter key), and the browser keys are
 `theone-devices.*` so a phone that has opened both games keeps them separate (both sites
 would live on `alonweb.github.io`, which shares storage).
 
 ### To make it the devices game
 
-1. **Its own server.** In Google Drive, open the "THE ONE focus group" spreadsheet and use
+1. **Its own server. Done 2026-09-28.** In Google Drive, open the "THE ONE focus group" spreadsheet and use
    **File → Make a copy** (the copy carries the Apps Script). In the copy: **Extensions → Apps
    Script**, paste this folder's `apps-script.gs`, add **Services → Google Sheets API**, set
    **Project Settings → Script properties → `PRESENTER_KEY`**, then **Deploy → New deployment →

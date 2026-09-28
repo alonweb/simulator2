@@ -1,7 +1,8 @@
 // Session configuration. Everything a run of the session needs to change lives here.
-// The devices edition needs its own spreadsheet and Apps Script deployment: sharing the
-// original's would mix both games' rows, and Reset on either would wipe both.
-export const ENDPOINT = 'https://script.google.com/macros/s/DEVICES-SERVER-NOT-SET-UP/exec';
+// The devices edition's own spreadsheet and Apps Script deployment (2026-09-28). Never point
+// it at the women's server: the rows would mix, and Reset on either would wipe both.
+export const ENDPOINT =
+  'https://script.google.com/macros/s/AKfycbwQKBiQ-Vhjt1WwTgdA5FRKqVZINGj00O6_9owAtIGFy1YQApMpGPdAuZz813OovU0eIg/exec';
 
 // The four categories, taken from the pilot mockup (Pilot mockup.pdf, 2026-09-23).
 // The mockup answers the question the design left open: Confidence and Sense of Humour
