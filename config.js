@@ -35,8 +35,14 @@ export const MATCHUPS = [
 // presenter page shows the whole sheet regardless, and Reset wipes it. Nobody types it.
 export const SESSION_LABEL = 'DEVICES1';
 
-// The survey. Players reach it after locking, or from the menu at any time. From Mati's
-// focus-group brief (2026-09-26): record choices and behaviour, not only "yes I would pay".
+// The survey is its own page on the women's site, offered once a phone has finished both
+// games (finish.js). This game marks itself done under DONE_KEY. Both sites share the
+// alonweb.github.io address, which is what lets one see that the other is finished.
+export const DONE_KEY = 'theone.done.devices';
+export const SURVEY_URL = '/the-one-simulator/survey.html';
+
+// Not asked in this game: the survey lives on the women's site (SURVEY_URL). Kept here only
+// for load.mjs's survey wave. From Mati's focus-group brief (2026-09-26).
 // type: 'scale' (min..max), 'choice' (one of options), or 'text'. required defaults to true.
 // `short` is the column heading on the presenter page. Edit freely before the day.
 export const SURVEY = [

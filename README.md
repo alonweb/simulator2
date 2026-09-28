@@ -8,6 +8,12 @@ focus group", same presenter key), and the browser keys are
 `theone-devices.*` so a phone that has opened both games keeps them separate (both sites
 would live on `alonweb.github.io`, which shares storage).
 
+**No survey in this game.** The survey is its own page on the women's site
+(https://alonweb.github.io/the-one-simulator/survey.html), offered once a phone has finished
+both games; its answers land in the women's sheet and show on the women's presenter page.
+This game only marks itself finished (`DONE_KEY` in `config.js`, `finish.js`), and its
+thank-you screen shows the survey button when the women's game is finished too.
+
 ### To make it the devices game
 
 1. **Its own server. Done 2026-09-28.** In Google Drive, open the "THE ONE focus group" spreadsheet and use
@@ -17,8 +23,8 @@ would live on `alonweb.github.io`, which shares storage).
    Web app** (execute as me, anyone can access). Put its `/exec` URL in `config.js` `ENDPOINT`.
    Do not point this at the women's server: the rows would mix and Reset would wipe both.
 2. **The content**, in `config.js`: `MATCHUPS` (five pairs; keep ids `m1`–`m5`, give each device
-   an id, a name and a photo path), `CATEGORIES` (key, short label, the question on the banner)
-   and, if it changes, `SURVEY`. Photos go in `photos/`.
+   an id, a name and a photo path) and `CATEGORIES` (key, short label, the question on the
+   banner). Photos go in `photos/`. Survey changes go in the women's `config.js`, not here.
 3. **Wording written for contestants**, outside `config.js`: the first question
    (`flow.js`, "who is the one?"), the join screen's "Tonight's ten" (`app.js`), the review and
    presenter lines "Who is the one" and "her" (`present-format.js`), and the presenter's contest
@@ -32,8 +38,8 @@ would live on `alonweb.github.io`, which shares storage).
 
 A throwaway research instrument for one live session. Twenty people play one round of
 THE ONE on their own phones, one matchup at a time as the presenter releases each, answer a
-short survey, and are done; the presenter alone sees the scored board, every player's answers
-and the survey, and can project the board for the room between matchups. The release-by-release
+then answer the survey on its own page on the women's site; the presenter alone sees the
+scored board and every player's answers, and can project the board for the room between matchups. The release-by-release
 pacing is for the meeting only; it is not how the product runs a round.
 None of this is production code.
 
@@ -45,8 +51,9 @@ Spec and plan live in the HumanPatterns project under
 | File | What it is |
 |---|---|
 | `index.html`, `app.js`, `draft.js` | What a participant sees. Answers are held in the browser and sent once, at lock. |
-| `presenter.html`, `presenter.js` | The statistics page, opened with the presenter key: leaderboard, every player's answers, survey, close, export. |
-| `survey.js` | The end-of-game survey: validity and the presenter's table. Pure functions, fully tested. |
+| `presenter.html`, `presenter.js` | The statistics page, opened with the presenter key: leaderboard, every player's answers, close, export. |
+| `finish.js` | Marks this phone as having finished this game, so the survey can wait for both. |
+| `survey.js` | Survey validity, used here only by `load.mjs`; the survey itself is on the women's site. |
 | `scoring.js` | Every point in the session. Pure functions, fully tested. |
 | `stats.js` | Crowd result, leaderboard, session statistics. Pure functions, fully tested. |
 | `store.js` | The only code that touches the network. |
@@ -93,12 +100,7 @@ page to one session's rows.
 
 ## The survey
 
-After locking the fifth matchup, a player answers the questions in `SURVEY` (`config.js`), then sees a
-thank-you screen. The menu also offers **Answer the survey** at any point; the game
-resumes where it was, and a survey is sent once per device. Players never see results. Answers land in a `survey` tab the script
-creates on first use, and appear in the presenter page under "The survey". Three question
-types: `scale` (min..max with end labels), `choice` (one of `options`), `text`.
-`required: false` makes a question optional.
+Not in this game; see the note at the top of this file.
 
 ## What the key protects, and what it does not
 
@@ -123,10 +125,10 @@ data is a focus group's opinions about photographs, not anything that needs to.
    who has joined and is still playing, so count the room. When the room is in, press
    **Project the board**: the board alone, large, with no answers or survey on it. Esc or
    Close returns to the page. Then release the next matchup.
-5. After the fifth lock a player answers the survey and sees a thank-you screen. Phones never
+5. After the fifth lock a player sees a thank-you screen, with the survey button once the women's game is finished too. Phones never
    show results. When everyone has locked the fifth: **Close the round**. The page refreshes
    every 10 seconds.
-6. **Export raw answers** before you close the laptop. The export holds the survey too. Do not edit `config.js` once the
+6. **Export raw answers** before you close the laptop. Do not edit `config.js` once the
    first person has locked: category keys and matchup ids are the join between a stored
    answer and the reveal, and changing one strands the answers already in the sheet. That file is what the session can be
    re-scored from afterwards, and it is the only copy that does not need the sheet.

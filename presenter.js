@@ -1,10 +1,9 @@
-import { MATCHUPS, CATEGORIES, SURVEY, SESSION_LABEL } from './config.js';
-import { fetchRows, fetchSurvey, fetchSession, setState, resetSheet, release, mergeByPlayer,
+import { MATCHUPS, CATEGORIES, SESSION_LABEL } from './config.js';
+import { fetchRows, fetchSession, setState, resetSheet, release, mergeByPlayer,
          normalizeCode } from './store.js';
 import { escapeHtml as esc } from './html.js';
 import { formatCounts, answerRows } from './present-format.js';
 import { crowdResult, sessionStats, contestantStanding, boardTable } from './stats.js';
-import { surveyTable } from './survey.js';
 
 // The page shows the whole sheet. ?code=X on the URL narrows it to one session's rows.
 // Releasing and closing apply to SESSION_LABEL, which is what every new lock carries.
@@ -26,7 +25,6 @@ function showLogin(message) {
 }
 let rows = [];        // raw, one per lock, for the export
 let players = [];     // one per player, a player's matchup rows joined
-let surveyRows = [];
 let live = [];        // the released matchups, in matchup order
 let board = [];
 
@@ -126,15 +124,6 @@ function playerCards(stats, crowd) {
   }).join('');
 }
 
-function surveySection() {
-  const t = surveyTable(surveyRows, SURVEY);
-  if (!t.rows.length) return `<h2>The survey</h2><p class="note">No survey answers yet. They arrive after each player locks the last matchup.</p>`;
-  return `<h2>The survey — ${t.rows.length} answered</h2>
-    <table><tr><th>Name</th>${t.header.map(h => `<th>${esc(h)}</th>`).join('')}</tr>
-    ${t.rows.map(r => `<tr><td><strong>${esc(r.participant)}</strong></td>${r.cells.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}
-    </table>`;
-}
-
 let refreshing = false;
 
 async function refresh() {
@@ -145,8 +134,6 @@ async function refresh() {
     rows = await fetchRows(CODE, key());
     players = mergeByPlayer(rows);
     showStats();
-    // the survey tab is created by the first answer; a missing one is not an error
-    surveyRows = await fetchSurvey(CODE, key()).catch(() => []);
     const session = await fetchSession(SESSION_LABEL).catch(() => ({ state: 'unknown', released: [] }));
     live = LEGACY_VIEW ? MATCHUPS : MATCHUPS.filter(m => session.released.includes(m.id));
     const allCrowd = buildCrowd(players, MATCHUPS);
@@ -160,13 +147,13 @@ async function refresh() {
     const pending = CATEGORIES.filter(c => c.needsReplacement);
     const warning = pending.length
       ? `<p class="warn">${pending.map(c => c.label).join(' and ')} still need replacing in config.js — they are judged from video, and there is none for this session.</p>` : '';
-    const header = `<p>${CODE ? `Showing session <strong>${esc(CODE)}</strong> only. ` : 'Everything in the sheet. '}Round is <strong>${session.state}</strong>. Players who have locked something: <strong>${players.length}</strong>. Survey answered: <strong>${surveyRows.length}</strong>.</p>`;
+    const header = `<p>${CODE ? `Showing session <strong>${esc(CODE)}</strong> only. ` : 'Everything in the sheet. '}Round is <strong>${session.state}</strong>. Players who have locked something: <strong>${players.length}</strong>. The survey is on the women's game's presenter page.</p>`;
     const strip = LEGACY_VIEW
       ? '<p class="note">An older session: every matchup is counted, and releases apply only to the live session.</p>'
       : competitions(session.released, allCrowd);
 
     if (!live.length || !board.length) {
-      out.innerHTML = `${warning}${header}${strip}${boardSection()}${surveyRows.length ? surveySection() : ''}
+      out.innerHTML = `${warning}${header}${strip}${boardSection()}
         <p class="note">This updates itself every 10 seconds.</p>`;
       return;
     }
@@ -203,7 +190,6 @@ async function refresh() {
         A share below 51, a tied room, or a contestant nobody picked scores 0. Most a matchup can give is 26.</p>
       ${playerCards(stats, crowd)}
 
-      ${surveySection()}
 
       <details><summary>What the room said, matchup by matchup</summary>
       ${live.map(m => {
@@ -277,7 +263,7 @@ document.getElementById('reset').onclick = async () => {
   refresh();
 };
 document.getElementById('export').onclick = () => {
-  const blob = new Blob([JSON.stringify({ session: CODE || 'all', answers: rows, survey: surveyRows }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ session: CODE || 'all', answers: rows }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `the-one-${CODE || 'all'}-${new Date().toISOString().slice(0, 10)}.json`;
