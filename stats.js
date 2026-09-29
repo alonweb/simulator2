@@ -39,8 +39,13 @@ export function crowdResult(rows, matchupId, categoryKeys, contestantIds = []) {
       categories[key][who] = total ? Math.round((n * 100) / total) : 0;
     }
   }
+  // each side's share of the room on the one question, which its slider share is scored against
+  const overallShares = {};
+  for (const [who, n] of Object.entries(overallCounts)) {
+    overallShares[who] = voters ? Math.round((n * 100) / voters) : 0;
+  }
   return {
-    matchupId, voters, overallCounts, categories,
+    matchupId, voters, overallCounts, overallShares, categories,
     overallTied: tied,
     overallWinner: (!entries.length || tied) ? null : entries[0][0]
   };
@@ -90,11 +95,24 @@ export function sessionStats(rows, crowdByMatchup) {
     }
   }
   const perCategory = {};
-  let measured = 0, errorSum = 0;
+  const perMatchup = {};
+  let measured = 0, errorSum = 0, shareAnswers = 0, shareExact = 0;
   for (const row of rows || []) {
     for (const [matchupId, crowd] of Object.entries(crowdByMatchup)) {
       const m = row && row.answers && row.answers[matchupId];
       if (!m) continue;
+      // the one question's share, against the room's share for the side the player named
+      const o = m.overall;
+      const actualSide = o && o.predicted && typeof o.share === 'number'
+        ? (crowd.overallShares || {})[o.predicted] : undefined;
+      if (actualSide !== undefined) {
+        const err = Math.abs(actualSide - o.share);
+        measured++; errorSum += err; shareAnswers++;
+        if (Math.round(actualSide) === Math.round(o.share)) shareExact++;
+        perMatchup[matchupId] = perMatchup[matchupId] || { n: 0, errorSum: 0 };
+        perMatchup[matchupId].n++;
+        perMatchup[matchupId].errorSum += err;
+      }
       for (const [key, pred] of Object.entries(m.categories || {})) {
         const actual = (crowd.categories[key] || {})[pred.contestant];
         if (actual === undefined) continue;
@@ -109,15 +127,20 @@ export function sessionStats(rows, crowdByMatchup) {
   const categoryDifficulty = Object.entries(perCategory)
     .map(([key, v]) => ({ key, meanAbsoluteError: v.errorSum / v.n, answers: v.n }))
     .sort((a, b) => b.meanAbsoluteError - a.meanAbsoluteError);
+  const matchupDifficulty = Object.entries(perMatchup)
+    .map(([matchupId, v]) => ({ matchupId, meanAbsoluteError: v.errorSum / v.n, answers: v.n }))
+    .sort((a, b) => b.meanAbsoluteError - a.meanAbsoluteError);
   const totals = board.map(b => b.total);
+  const answered = categoryAnswers + shareAnswers;
   return {
     participants: board.length,
     categoryAnswers,
     measuredAnswers: measured,
-    exactRate: categoryAnswers ? exact / categoryAnswers : 0,
+    exactRate: answered ? (exact + shareExact) / answered : 0,
     // divided by what was actually measured, not by answers we had no crowd data for
     meanAbsoluteError: measured ? errorSum / measured : 0,
     categoryDifficulty,
+    matchupDifficulty,
     spread: totals.length ? { best: Math.max(...totals), worst: Math.min(...totals) } : null,
     ties: Object.values(crowdByMatchup).filter(c => c.overallTied).map(c => c.matchupId),
     leaderboard: board

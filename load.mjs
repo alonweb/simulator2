@@ -21,7 +21,7 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function answers() {
   const out = {};
   for (const m of MATCHUPS) {
-    out[m.id] = { overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]) }, categories: {} };
+    out[m.id] = { overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]), share: 51 + Math.floor(Math.random() * 50) }, categories: {} };
     for (const c of CATEGORIES) {
       out[m.id].categories[c.key] = { vote: pick([m.a.id, m.b.id]), contestant: pick([m.a.id, m.b.id]), share: 51 + Math.floor(Math.random() * 50) };
     }

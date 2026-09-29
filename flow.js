@@ -1,11 +1,11 @@
 import { splitFromSlider, sliderFromSplit, DEFAULT_SHARE } from './draft.js';
 
 /**
- * One matchup is five questions, asked one at a time on their own screen, exactly as
- * the pilot mockup shows them: who is the one, then each category in turn.
+ * One matchup's questions, asked one at a time on their own screen: which is the one, then
+ * each category in turn. The devices game has no categories, so it is the one question.
  */
 export function questionsOf(categories) {
-  return [{ key: 'overall', label: 'who is the one?', short: 'Who is the one' },
+  return [{ key: 'overall', label: 'Which is the one?', short: 'Which is the one' },
           ...categories.map(c => ({ key: c.key, label: c.question || c.label, short: c.label }))]
     .map((q, i) => ({ ...q, n: i + 1 }));
 }

@@ -4,11 +4,15 @@ import { questionsOf, isQuestionAnswered, predictionPatch, sliderOf } from './fl
 
 const CATS = [{ key: 'smile', label: 'the best smile?' }, { key: 'style', label: 'the best style?' }];
 
+test('with no categories a matchup is the one question', () => {
+  assert.deepEqual(questionsOf([]).map(q => [q.key, q.n, q.short]), [['overall', 1, 'Which is the one']]);
+});
+
 test('the questions are the overall one followed by the categories, numbered from one', () => {
   const qs = questionsOf(CATS);
   assert.deepEqual(qs.map(q => q.key), ['overall', 'smile', 'style']);
   assert.deepEqual(qs.map(q => q.n), [1, 2, 3]);
-  assert.equal(qs[0].label, 'who is the one?');
+  assert.equal(qs[0].label, 'Which is the one?');
   assert.equal(qs[2].label, 'the best style?');
 });
 

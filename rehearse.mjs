@@ -16,7 +16,7 @@ for (let i = 1; i <= N; i++) {
   const answers = {};
   for (const m of MATCHUPS) {
     answers[m.id] = {
-      overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]) },
+      overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]), share: 51 + Math.floor(Math.random() * 50) },
       categories: {}
     };
     for (const c of CATEGORIES) {

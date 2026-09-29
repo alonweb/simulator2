@@ -4,31 +4,26 @@
 export const ENDPOINT =
   'https://script.google.com/macros/s/AKfycbwQKBiQ-Vhjt1WwTgdA5FRKqVZINGj00O6_9owAtIGFy1YQApMpGPdAuZz813OovU0eIg/exec';
 
-// The four categories, taken from the pilot mockup (Pilot mockup.pdf, 2026-09-23).
-// The mockup answers the question the design left open: Confidence and Sense of Humour
-// need video, and the pilot replaces them with two categories that can be judged from a
-// photograph. `question` is the wording on the yellow banner; `label` is the short name
-// used on the review, results and presenter screens.
-export const CATEGORIES = [
-  { key: 'smile', label: 'Best smile', question: 'the best smile?', media: 'image',
-    hint: 'Expression, smile, eyes, overall look.' },
-  { key: 'style', label: 'Style', question: 'the best style?', media: 'image',
-    hint: 'Fashion, grooming, hair, accessories.' },
-  { key: 'body',  label: 'Body', question: 'the best body?', media: 'image',
-    hint: 'Posture, presence, the whole frame.' },
-  { key: 'mama',  label: 'Take to Mama', question: 'Take to Mama?', media: 'image',
-    hint: 'Who would you introduce at home?' }
-];
+// No categories in the devices game: each matchup asks one question, "Which is the one?"
+// (flow.js), and Alon asked for nothing more (2026-09-29). The women's game keeps its four.
+// The code still takes categories here, in the women's shape, if they are ever wanted back.
+export const CATEGORIES = [];
 
-// Ten contestants in five matchups. These are the AI demo portraits already used in the
-// mockups, labelled as such there; they are not real contestants. Swap in the real set
-// when Avishai delivers it, keeping the c1..c10 ids so stored answers still resolve.
+// Ten pairs from Alon's "product head to head" folder (2026-09-29), in the folder's order.
+// The ids are what the sheet stores, so they are the names in plain letters, readable in a
+// raw row. The "air max" photo shows a Nike Air Jordan 1, so that side is called Nike.
+const side = (id, name) => ({ id, name, photo: `photos/${id}.jpg` });
 export const MATCHUPS = [
-  { id: 'm1', a: { id: 'c1', name: 'Ana', photo: 'photos/c1.jpg' }, b: { id: 'c2', name: 'Camila', photo: 'photos/c2.jpg' } },
-  { id: 'm2', a: { id: 'c3', name: 'Carolina', photo: 'photos/c3.jpg' }, b: { id: 'c4', name: 'Daniela', photo: 'photos/c4.jpg' } },
-  { id: 'm3', a: { id: 'c5', name: 'Gabriela', photo: 'photos/c5.jpg' }, b: { id: 'c6', name: 'Isabella', photo: 'photos/c6.jpg' } },
-  { id: 'm4', a: { id: 'c7', name: 'Juliana', photo: 'photos/c7.jpg' }, b: { id: 'c8', name: 'Laura', photo: 'photos/c8.jpg' } },
-  { id: 'm5', a: { id: 'c9', name: 'Luciana', photo: 'photos/c9.jpg' }, b: { id: 'c10', name: 'Manuela', photo: 'photos/c10.jpg' } }
+  { id: 'm1',  a: side('ronaldo', 'Ronaldo'),         b: side('messi', 'Messi') },
+  { id: 'm2',  a: side('cappuccino', 'Cappuccino'),   b: side('beer', 'Beer') },
+  { id: 'm3',  a: side('lamborghini', 'Lamborghini'), b: side('ferrari', 'Ferrari') },
+  { id: 'm4',  a: side('burger-king', 'Burger King'), b: side('mcdonalds', "McDonald's") },
+  { id: 'm5',  a: side('xbox', 'Xbox'),               b: side('ps5', 'PS5') },
+  { id: 'm6',  a: side('bmw', 'BMW'),                 b: side('ducati', 'Ducati') },
+  { id: 'm7',  a: side('adidas', 'Adidas'),           b: side('nike', 'Nike') },
+  { id: 'm8',  a: side('omega', 'Omega'),             b: side('rolex', 'Rolex') },
+  { id: 'm9',  a: side('seychelles', 'Seychelles'),   b: side('hawaii', 'Hawaii') },
+  { id: 'm10', a: side('g-class', 'G-Class'),         b: side('escalade', 'Escalade') }
 ];
 
 // Every row this build writes carries this label; closing the round applies to it. The

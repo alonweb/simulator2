@@ -60,6 +60,42 @@ test('a wrong overall winner does not zero the categories', () => {
   assert.equal(r.total, 6);
 });
 
-test('the ceiling is 26 on one matchup', () => {
-  assert.equal(MAX_PER_MATCHUP, 26);
+// The devices game asks one question per matchup, so its slider share is scored too:
+// the side the room picks +2, then the same bands and exact hit as a category.
+test('the one question scores the side, then the band and the exact share', () => {
+  const crowd = { overallWinner: 'A', overallShares: { A: 65, B: 35 }, categories: {} };
+  const exact = scoreMatchup({ overall: { predicted: 'A', share: 65 } }, crowd);
+  assert.equal(exact.overallSide, 2);
+  assert.equal(exact.overallShare.points, 6);
+  assert.equal(exact.overall, 8);
+  assert.equal(exact.total, 8);
+  const band = scoreMatchup({ overall: { predicted: 'A', share: 61 } }, crowd);
+  assert.equal(band.overall, 3);
+  assert.equal(band.overallShare.sameBand, true);
+  const other = scoreMatchup({ overall: { predicted: 'A', share: 80 } }, crowd);
+  assert.equal(other.overall, 2);
+  assert.equal(other.overallShare.reason, 'wrong-band');
+});
+
+test('the wrong side scores nothing on the one question, whatever the share', () => {
+  const crowd = { overallWinner: 'A', overallShares: { A: 65, B: 35 }, categories: {} };
+  const r = scoreMatchup({ overall: { predicted: 'B', share: 65 } }, crowd);
+  assert.equal(r.overall, 0);
+  assert.equal(r.overallShare, null);
+  assert.equal(r.total, 0);
+});
+
+test('a tied room scores nothing on the one question', () => {
+  const crowd = { overallWinner: null, overallShares: { A: 50, B: 50 }, categories: {} };
+  assert.equal(scoreMatchup({ overall: { predicted: 'A', share: 50 } }, crowd).total, 0);
+});
+
+test('an answer with no share, or a crowd with no shares, still scores the side', () => {
+  const crowd = { overallWinner: 'A', overallShares: { A: 65, B: 35 }, categories: {} };
+  assert.equal(scoreMatchup({ overall: { predicted: 'A' } }, crowd).total, 2);
+  assert.equal(scoreMatchup({ overall: { predicted: 'A', share: 65 } }, { overallWinner: 'A', categories: {} }).total, 2);
+});
+
+test('the ceiling is 8 on one matchup: one question, no categories', () => {
+  assert.equal(MAX_PER_MATCHUP, 8);
 });

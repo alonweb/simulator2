@@ -1,6 +1,7 @@
 export const BANDS = [[50, 59], [60, 69], [70, 79], [80, 89], [90, 100]];
 export const FLOOR = 51;
-export const MAX_PER_MATCHUP = 2 + 4 * (1 + 5);
+// one question per matchup in the devices game: the side +2, its share band +1 and exact +5
+export const MAX_PER_MATCHUP = 2 + (1 + 5);
 
 export function bandOf(share) {
   if (share < 50) return null;
@@ -25,9 +26,19 @@ export function scoreOverall(predicted, crowdWinner) {
   return predicted === crowdWinner ? 2 : 0;
 }
 
+/**
+ * The devices game asks only the one question, so its slider share counts as well: once the
+ * side is right, the share scores like a category. A wrong side or a tied room scores
+ * nothing, share included. `overall` is the question's whole score.
+ */
 export function scoreMatchup(answer, crowd) {
   const a = answer || {};
-  const overall = scoreOverall(a.overall && a.overall.predicted, crowd.overallWinner);
+  const o = a.overall || {};
+  const overallSide = scoreOverall(o.predicted, crowd.overallWinner);
+  const overallShare = overallSide && typeof o.share === 'number' && crowd.overallShares
+    ? scoreCategory({ contestant: o.predicted, share: o.share }, crowd.overallShares)
+    : null;
+  const overall = overallSide + (overallShare ? overallShare.points : 0);
   const categories = {};
   let total = overall;
   for (const key of Object.keys(a.categories || {})) {
@@ -35,5 +46,5 @@ export function scoreMatchup(answer, crowd) {
     categories[key] = r;
     total += r.points;
   }
-  return { overall, categories, total };
+  return { overall, overallSide, overallShare, categories, total };
 }

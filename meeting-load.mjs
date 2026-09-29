@@ -4,8 +4,8 @@
 // sheet throughout. Afterwards the sheet is read back to prove nothing was lost.
 //
 //   N=30 KEY=<presenter key> CODE=LOADTEST node meeting-load.mjs
-//   THINK=90   each phone waits 0..90 s before locking, as people answering five questions do
-//   WAVES="m1|m2,m3|m4,m5"   which matchups each release wave opens
+//   THINK=30   each phone waits 0..30 s before locking, as people answering one question do
+//   WAVES="m1|m2,m3|m4,m5|m6|m7,m8|m9,m10"   which matchups each release wave opens
 //
 // Rows are stamped CODE (LOADTEST), and releases apply to that code only, so live phones on
 // LIVE1 are not moved. The rows still land in the one sheet: Reset it afterwards.
@@ -17,7 +17,7 @@ const N = Number(process.env.N || 30);
 const KEY = process.env.KEY || '';
 const CODE = process.env.CODE || 'LOADTEST';
 const THINK = Number(process.env.THINK || 0) * 1000;
-const WAVES = (process.env.WAVES || 'm1|m2,m3|m4,m5').split('|').map(w => w.split(','));
+const WAVES = (process.env.WAVES || 'm1|m2,m3|m4,m5|m6|m7,m8|m9,m10').split('|').map(w => w.split(','));
 if (!KEY) { console.error('Set KEY to the presenter key.'); process.exit(1); }
 
 const run = Date.now();
@@ -31,7 +31,7 @@ function answerFor(m) {
   for (const { key: k } of CATEGORIES) {
     cats[k] = { vote: pick([m.a.id, m.b.id]), contestant: pick([m.a.id, m.b.id]), share: 51 + Math.floor(Math.random() * 50) };
   }
-  return { overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]), share: 60 }, categories: cats };
+  return { overall: { vote: pick([m.a.id, m.b.id]), predicted: pick([m.a.id, m.b.id]), share: 51 + Math.floor(Math.random() * 50) }, categories: cats };
 }
 
 const releasedAt = {};
@@ -131,6 +131,6 @@ const srows = (await fetchSurvey(CODE, KEY)).filter(r => String(r.submissionId).
 console.log(`\nwaiting phones: ${stats.polls} state reads, ${stats.pollErrors} failed (retried on the next poll), median ${secs(q(stats.pollMs, .5))}, slowest ${secs(Math.max(...stats.pollMs))}`);
 console.log(`presenter page: ${stats.presenterReads.length} reads, ${stats.presenterErrors} failed, slowest ${secs(Math.max(0, ...stats.presenterReads))}`);
 const lost = rows.length < N * MATCHUPS.length || complete.length < N || srows.length < N;
-console.log(`sheet check: ${rows.length}/${N * MATCHUPS.length} lock rows · ${complete.length}/${N} players with all five matchups · ${srows.length}/${N} surveys` +
+console.log(`sheet check: ${rows.length}/${N * MATCHUPS.length} lock rows · ${complete.length}/${N} players with every matchup · ${srows.length}/${N} surveys` +
   (lost ? '  <-- ROWS LOST' : '  <-- nothing lost'));
 process.exit(lost || stats.locks.some(l => !l.ok) || surveys.some(s => !s.ok) ? 1 : 0);

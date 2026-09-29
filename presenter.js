@@ -4,6 +4,7 @@ import { fetchRows, fetchSession, setState, resetSheet, release, mergeByPlayer,
 import { escapeHtml as esc } from './html.js';
 import { formatCounts, answerRows } from './present-format.js';
 import { crowdResult, sessionStats, contestantStanding, boardTable } from './stats.js';
+import { MAX_PER_MATCHUP } from './scoring.js';
 
 // The page shows the whole sheet. ?code=X on the URL narrows it to one session's rows.
 // Releasing and closing apply to SESSION_LABEL, which is what every new lock carries.
@@ -45,6 +46,20 @@ function buildCrowd(rows, matchups) {
 
 const numberOf = (m) => MATCHUPS.indexOf(m) + 1;
 const pair = (m) => `<img class="thumb" src="${esc(m.a.photo)}" alt="">${esc(m.a.name)} v <img class="thumb" src="${esc(m.b.photo)}" alt="">${esc(m.b.name)}`;
+
+/** Where the room was hardest to read: by category when there are any, else by matchup. */
+function hardest(stats) {
+  if (CATEGORIES.length) {
+    return stats.categoryDifficulty.length
+      ? stats.categoryDifficulty.map(d => `${(CATEGORIES.find(c => c.key === d.key) || {}).label || d.key} (average error ${d.meanAbsoluteError.toFixed(1)})`).join(', ')
+      : 'no data yet';
+  }
+  const top = stats.matchupDifficulty.slice(0, 3);
+  return top.length
+    ? top.map(d => { const m = MATCHUPS.find(x => x.id === d.matchupId);
+        return `${m ? `${numberOf(m)}. ${esc(m.a.name)} v ${esc(m.b.name)}` : esc(d.matchupId)} (average error ${d.meanAbsoluteError.toFixed(1)})`; }).join(', ')
+    : 'no data yet';
+}
 
 function competitions(released, allCrowd) {
   return `<h2>Competitions</h2>
@@ -115,7 +130,8 @@ function playerCards(stats, crowd) {
       ${live.map(m => {
         const s = p.perMatchup[m.id];
         const lines = answerRows(m, raw && raw.answers && raw.answers[m.id], crowd[m.id], s, CATEGORIES);
-        return `<h4>${numberOf(m)}. ${pair(m)} <span class="pts">${lines.map(l => l.points).join(' + ')} = ${s ? s.total : 0}</span></h4>
+        const sum = lines.length > 1 ? `${lines.map(l => l.points).join(' + ')} = ` : '';
+        return `<h4>${numberOf(m)}. ${pair(m)} <span class="pts">${sum}${s ? s.total : 0} pts</span></h4>
           <table><tr><th>Question</th><th>Player said</th><th>Room said</th><th>Points</th><th>Why</th></tr>
           ${lines.map(l => `<tr><td>${esc(l.question)}</td><td>${esc(l.yours)}</td><td>${esc(l.room)}</td><td class="pts">${l.points}</td><td>${esc(l.why)}</td></tr>`).join('')}
           </table>`;
@@ -160,19 +176,17 @@ async function refresh() {
 
     out.innerHTML = `
       ${warning}${header}${strip}${boardSection()}
-      <p>Exact category hits: ${(stats.exactRate * 100).toFixed(1)}%.
+      <p>Exact hits on the room's share: ${(stats.exactRate * 100).toFixed(1)}%.
          Average error predicting the room: ${stats.meanAbsoluteError.toFixed(1)} points.
-         ${stats.ties.length ? 'Tied matchups: ' + stats.ties.join(', ') : 'No ties.'}</p>
-      <p>Hardest to predict: ${stats.categoryDifficulty.length
-        ? stats.categoryDifficulty.map(d => `${(CATEGORIES.find(c => c.key === d.key) || {}).label || d.key} (average error ${d.meanAbsoluteError.toFixed(1)})`).join(', ')
-        : 'no data yet'}.</p>
+         ${stats.ties.length ? 'Tied matchups: ' + stats.ties.map(id => numberOf(MATCHUPS.find(m => m.id === id) || {})).join(', ') : 'No ties.'}</p>
+      <p>Hardest to predict: ${hardest(stats)}.</p>
 
-      <h2>The contest — how the contestants did</h2>
+      <h2>The contest — which side the room chose</h2>
       <p class="note">This is the room's own vote, not the predictions, on the released matchups. <strong>Crowd share</strong> is the share of the room
-        that picked her as the one in her matchup; above 50% she won it. Each <strong>category</strong> shows the share of the room
-        that picked her for that question, and a tick where hers was the larger share. <strong>Won</strong> counts those ticks.</p>
-      <table class="contest"><tr><th>Contestant</th><th>Against</th><th>Result</th><th>Crowd share</th>
-        ${CATEGORIES.map(cat => `<th>${esc(cat.label)}</th>`).join('')}<th>Won</th></tr>
+        that picked that side in its matchup; above 50% it won.${CATEGORIES.length ? ` Each <strong>category</strong> shows the share of the room
+        that picked it for that question, and a tick where its share was the larger. <strong>Won</strong> counts those ticks.` : ''}</p>
+      <table class="contest"><tr><th>Side</th><th>Against</th><th>Result</th><th>Crowd share</th>
+        ${CATEGORIES.map(cat => `<th>${esc(cat.label)}</th>`).join('')}${CATEGORIES.length ? '<th>Won</th>' : ''}</tr>
         ${contestantStanding(players, live, CATEGORIES).map(c =>
           `<tr><td><img class="thumb" src="${esc(c.photo)}" alt=""><strong>${esc(c.name)}</strong></td>
            <td><img class="thumb" src="${esc(c.opponentPhoto)}" alt="">${esc(c.opponent)}</td>
@@ -180,14 +194,14 @@ async function refresh() {
            <td>${c.overallShare}%</td>
            ${CATEGORIES.map(cat => { const b = c.byCategory[cat.key] || {};
              return `<td class="${b.won ? 'won' : ''}">${b.share}%${b.won ? ' ✓' : b.tied ? ' =' : ''}</td>`; }).join('')}
-           <td><strong>${c.categoriesWon}</strong> of ${c.categoriesTotal}</td></tr>`).join('')}
+           ${CATEGORIES.length ? `<td><strong>${c.categoriesWon}</strong> of ${c.categoriesTotal}</td>` : ''}</tr>`).join('')}
       </table>
 
       <h2>Every player's answers, and how the points add up</h2>
       <p class="note">Ranked as above. "Player said" is who they predicted the room would pick and the share they gave; their own vote is in brackets.
-        The rules: right overall winner +2. Each category: the room's share for that contestant falls in one of five bands
+        The rules: the side the room picks +2. Then the room's share for that side falls in one of five bands
         (50–59, 60–69, 70–79, 80–89, 90–100); same band as the player's number +1, and the exact number +5 on top.
-        A share below 51, a tied room, or a contestant nobody picked scores 0. Most a matchup can give is 26.</p>
+        The wrong side, or a tied room, scores 0. Most a matchup can give is ${MAX_PER_MATCHUP}.</p>
       ${playerCards(stats, crowd)}
 
 
@@ -197,7 +211,7 @@ async function refresh() {
         return `<h3>${numberOf(m)}. ${pair(m)}</h3>
           <table>
             <tr><th>Question</th><th>How the room voted</th></tr>
-            <tr><td>Who is the one</td><td>${formatCounts(c.overallCounts, m)}${
+            <tr><td>Which is the one</td><td>${formatCounts(c.overallCounts, m)}${
               c.overallTied ? ' <strong>— tied, so this question scores zero for everyone</strong>' : ''}</td></tr>
             ${CATEGORIES.map(cat =>
               `<tr><td>${esc(cat.label)}</td><td>${formatCounts(c.categories[cat.key], m)}</td></tr>`).join('')}

@@ -53,7 +53,7 @@ function go(screen) { state.screen = screen; state.menu = false; saveDraft(state
 
 /**
  * Moves the player on from wherever they are: into the next released matchup, to the
- * end once all five are locked, or nowhere (false), which means wait.
+ * end once every matchup is locked, or nowhere (false), which means wait.
  */
 function advance() {
   if (allLocked()) { go('done'); return true; }
@@ -158,14 +158,14 @@ function renderJoin() {
       <button id="start" class="cta">Start <span class="chev" aria-hidden="true">&rsaquo;</span></button>
     </div>
     <div class="rules">
-      <p>Five matchups, five questions each. Every question asks you twice: who <strong>you</strong>
-      pick, and how you think <strong>the room</strong> will split.</p>
+      <p>Ten matchups, one question each: which one <strong>you</strong> pick, and how you
+      think <strong>the room</strong> will split.</p>
       <p>The presenter opens each matchup when it is time. Lock it, and wait for the next.</p>
       <p>Points come from reading the room, not from your own taste.</p>
     </div>
-    <p class="eyebrow" style="margin-top:22px">Tonight's ten</p>
-    <div class="strip">${MATCHUPS.flatMap(m => [m.a, m.b]).map(c =>
-      `<img src="${c.photo}" alt="${esc(c.name)}">`).join('')}</div>`;
+    <p class="eyebrow" style="margin-top:22px">Tonight's matchups</p>
+    <div class="strip">${MATCHUPS.map(m => `<div class="slot">
+      <img src="${m.a.photo}" alt="${esc(m.a.name)}"><img src="${m.b.photo}" alt="${esc(m.b.name)}"></div>`).join('')}</div>`;
   document.getElementById('start').onclick = () => {
     const name = document.getElementById('name').value.trim();
     if (!name) { document.getElementById('joinErr').textContent = 'Your name is needed.'; return; }
@@ -187,7 +187,7 @@ function renderWait() {
     <div class="banner">${banner}</div>
     <div class="strip">${MATCHUPS.map(m => `<div class="slot ${isLocked(m.id) ? 'done' : ''}">
       <img src="${m.a.photo}" alt=""><img src="${m.b.photo}" alt="">
-      <span>${isLocked(m.id) ? 'Locked' : 'Matchup ' + (MATCHUPS.indexOf(m) + 1)}</span></div>`).join('')}</div>
+      <span>${isLocked(m.id) ? '&check; ' : ''}${MATCHUPS.indexOf(m) + 1}</span></div>`).join('')}</div>
     ${closed ? '' : '<p class="note">Keep this page open. It moves on by itself.</p>'}
     ${state.offline ? '<p class="err">Cannot reach the server. Still trying.</p>' : ''}`;
   wireChrome(MATCHUPS[state.index] || MATCHUPS[0]);
@@ -233,11 +233,11 @@ function renderPlay() {
   el.innerHTML = `${chrome()}
     <div class="crumbs">
       ${back !== null ? '<button class="back" id="back"><span aria-hidden="true">&lsaquo;</span> Back</button>' : ''}
-      <span class="where">Matchup ${state.index + 1} of ${MATCHUPS.length} &middot; question ${q.n} of ${QUESTIONS.length}</span>
+      <span class="where">Matchup ${state.index + 1} of ${MATCHUPS.length}${QUESTIONS.length > 1 ? ` &middot; question ${q.n} of ${QUESTIONS.length}` : ''}</span>
     </div>
     <div class="stage">
       ${shot(m.a)}
-      <p class="ask">${q.n}. ${esc(q.label)}</p>
+      <p class="ask">${QUESTIONS.length > 1 ? `${q.n}. ` : ''}${esc(q.label)}</p>
       ${shot(m.b)}
     </div>
     <div class="predict ${voted ? 'live' : 'idle'}">
@@ -316,7 +316,7 @@ function renderReview() {
     <p class="eyebrow">Before you lock &middot; matchup ${state.index + 1} of ${MATCHUPS.length}</p>
     <h2 style="margin-top:0">Review</h2>
     <p>${done ? 'Everything is answered. Check it, then lock. A locked matchup cannot be changed.'
-              : 'Not finished. Answer the questions marked below.'}</p>
+              : 'Not finished. Answer what is marked below.'}</p>
     ${summaries.map(s => `
       <div class="card ${s.complete ? '' : 'incomplete'}">
         <h3>${esc(s.title)}</h3>

@@ -24,8 +24,9 @@ export function summariseMatchup(matchup, entry, categories) {
 
   const o = e.overall;
   if (o && o.vote && o.predicted) {
-    add(`Who is the one — you picked ${name(o.vote)}, you think the room picks ${name(o.predicted)}`, true, 'overall');
-  } else { add('Who is the one — not answered', false, 'overall'); }
+    const call = typeof o.share === 'number' ? `gives ${name(o.predicted)} ${o.share}%` : `picks ${name(o.predicted)}`;
+    add(`Which is the one — you picked ${name(o.vote)}, you think the room ${call}`, true, 'overall');
+  } else { add('Which is the one — not answered', false, 'overall'); }
 
   for (const c of categories) {
     const a = (e.categories || {})[c.key];
@@ -43,15 +44,24 @@ export function answerRows(matchup, answer, crowd, score, categories) {
   const o = (answer && answer.overall) || {};
   const c = crowd || {};
   const overallPts = score ? score.overall || 0 : 0;
+  // the side, then the share on it (scored only once the side is right)
+  const side = score ? (score.overallSide !== undefined ? score.overallSide : score.overall) || 0 : 0;
+  const sh = score && score.overallShare;
+  const pct = (id) => c.overallShares && c.overallShares[id] !== undefined ? ` ${c.overallShares[id]}%` : '';
   rows.push({
-    question: 'Who is the one',
-    yours: o.predicted ? `${name(o.predicted)} (voted ${name(o.vote)})` : 'not answered',
-    room: c.overallTied ? 'tied' : c.overallWinner ? name(c.overallWinner) : 'no votes',
+    question: 'Which is the one',
+    yours: o.predicted ? `${name(o.predicted)}${typeof o.share === 'number' ? ` ${o.share}%` : ''} (voted ${name(o.vote)})` : 'not answered',
+    room: c.overallTied ? 'tied' : c.overallWinner ? `${name(c.overallWinner)}${pct(c.overallWinner)}` : 'no votes',
     points: overallPts,
     why: !o.predicted ? 'not answered, 0'
       : c.overallTied ? 'room tied, nobody scores'
       : !c.overallWinner ? 'no votes, 0'
-      : overallPts ? 'right, +2' : 'wrong, 0'
+      : !side ? 'wrong side, 0'
+      : !sh ? 'right side, +2'
+      : sh.exact ? 'right side +2, same band +1, exact +5'
+      : sh.sameBand ? 'right side +2, same band +1'
+      : sh.reason === 'below-floor' ? `right side +2; room gave it ${sh.actual}%, below 51`
+      : `right side +2; room said ${sh.actual}%, another band`
   });
   for (const cat of categories || []) {
     const a = ((answer && answer.categories) || {})[cat.key];
@@ -66,8 +76,8 @@ export function answerRows(matchup, answer, crowd, score, categories) {
       why: !a || !a.contestant || !s ? 'not answered, 0'
         : s.exact ? 'exact hit: same band +1, exact +5'
         : s.sameBand ? 'same band, +1'
-        : s.reason === 'below-floor' ? `room gave her ${s.actual}%, below 51, 0`
-        : s.reason === 'no-data' ? 'nobody in the room picked her, 0'
+        : s.reason === 'below-floor' ? `room gave ${name(a.contestant)} ${s.actual}%, below 51, 0`
+        : s.reason === 'no-data' ? `nobody in the room picked ${name(a.contestant)}, 0`
         : `room said ${s.actual}%, another band, 0`
     });
   }
