@@ -30,6 +30,16 @@ export const MATCHUPS = [
 // presenter page shows the whole sheet regardless, and Reset wipes it. Nobody types it.
 export const SESSION_LABEL = 'DEVICES1';
 
+// "Start meeting" on either game's presenter page wakes both games' servers and keeps them awake
+// while the page is open (presenter.js): an idle server took up to 11 s to answer its first
+// request (2026-09-29), and a player saw a stuck Lock button. Each entry is a server and the
+// label its rows carry. The other game's address must match its own config.js.
+export const WAKE = [
+  { label: 'Devices game', endpoint: ENDPOINT, code: SESSION_LABEL },
+  { label: "Women's game", endpoint:
+    'https://script.google.com/macros/s/AKfycbzuWOwMRpYABdBa3q3MYHlR_jQaiXm5j7EQ3VJOjy3-SDDD6ckSH7sBAUo0Xg0RFNP_/exec', code: 'LIVE1' }
+];
+
 // The survey is its own page on the women's site, offered once a phone has finished both
 // games (finish.js). This game marks itself done under DONE_KEY. Both sites share the
 // alonweb.github.io address, which is what lets one see that the other is finished.
