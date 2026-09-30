@@ -58,3 +58,18 @@ test('a category may carry the banner wording separately from its short name', (
   assert.equal(qs[1].label, 'Take to Mama?');
   assert.equal(qs[1].short, 'Take to Mama');
 });
+
+// 2026-09-29: a phone left open since before a reset kept its old releases and locks.
+test('a different reset epoch means the sheet was reset since the phone last looked', async () => {
+  const { resetSince } = await import('./flow.js');
+  assert.equal(resetSince({ epoch: '100', released: ['m1'] }, { epoch: '200', released: ['m1'] }), true);
+  assert.equal(resetSince({ epoch: '100', released: ['m1'] }, { epoch: '100', released: ['m1', 'm2'] }), false);
+});
+
+test('without an epoch on the phone, releases that vanished mean a reset: nothing else takes one back', async () => {
+  const { resetSince } = await import('./flow.js');
+  assert.equal(resetSince({ released: ['m1', 'm2', 'm3', 'm4'] }, { epoch: '200', released: [] }), true);
+  assert.equal(resetSince({ epoch: null, released: ['m1', 'm2'] }, { epoch: null, released: ['m1'] }), true);
+  assert.equal(resetSince({ released: ['m1'] }, { epoch: '200', released: ['m1', 'm2'] }), false);
+  assert.equal(resetSince({}, { epoch: '200', released: [] }), false, 'a brand-new phone has nothing to lose');
+});
