@@ -19,9 +19,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-/* A question is one screenful. The photographs take whatever height is left once the
-   wordmark, the question, the slider and the button have had theirs, so the whole
-   question fits on a phone without scrolling. */
+/* The photographs take whatever height is left once the wordmark, the question, the slider and
+   the button have had theirs, but never less than their own minimum (.shot): on a short screen
+   the page scrolls rather than the photographs shrinking. */
 #screen { display: flex; flex-direction: column; min-height: 100dvh; padding-bottom: 24px; }
 
 body {
