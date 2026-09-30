@@ -95,6 +95,8 @@ p { margin: 10px 0; }
 /* the slider and its button line up with the photographs */
 .stage ~ .predict, .stage ~ #next { margin-left: calc(var(--edge) - var(--pad)); margin-right: calc(var(--edge) - var(--pad)); }
 .stage ~ #next { width: auto; }
+/* the lower photograph's zoom button sits clear of the banner's overlap */
+.stage > .shot:last-child .zoom { top: calc(var(--seam) + 10px); }
 .shot.dim .frame::after {
   content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.62);
   border-radius: var(--r-card); pointer-events: none;
@@ -125,7 +127,9 @@ p { margin: 10px 0; }
   flex: 0 0 auto; position: relative; z-index: 2; background: var(--yellow); color: var(--ink);
   text-align: center; font-weight: 800; font-style: italic;
   font-size: clamp(21px, 6.6vw, 28px); letter-spacing: -.02em;
-  padding: 12px var(--pad); margin: calc(var(--seam) * -1) 0; min-height: 56px;
+  /* the banner starts where the upper photograph ends, never on it (it hid the cars' wheels on an
+     iPhone, 2026-09-30); it still overlaps the top edge of the lower one */
+  padding: 12px var(--pad); margin: 0 0 calc(var(--seam) * -1); min-height: 56px;
   display: grid; place-items: center;
 }
 
