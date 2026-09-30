@@ -268,11 +268,13 @@ function renderPlay() {
             : !done ? 'Move the slider'
             : ahead !== null ? 'Next' : 'Review and lock';
 
+  // the design gives the photographs the screen: no progress row above them (the review and
+  // waiting screens say which matchup it is); a Back button still gets its row when there is one
   el.innerHTML = `${chrome()}
-    <div class="crumbs">
-      ${back !== null ? '<button class="back" id="back"><span aria-hidden="true">&lsaquo;</span> Back</button>' : ''}
-      <span class="where">Matchup ${state.index + 1} of ${MATCHUPS.length}${QUESTIONS.length > 1 ? ` &middot; question ${q.n} of ${QUESTIONS.length}` : ''}</span>
-    </div>
+    ${back !== null ? `<div class="crumbs">
+      <button class="back" id="back"><span aria-hidden="true">&lsaquo;</span> Back</button>
+      <span class="where">Matchup ${state.index + 1} of ${MATCHUPS.length} &middot; question ${q.n} of ${QUESTIONS.length}</span>
+    </div>` : ''}
     <div class="stage">
       ${shot(m.a)}
       <p class="ask">${QUESTIONS.length > 1 ? `${q.n}. ` : ''}${esc(q.label)}</p>
